@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RealityView">
+        <attr name="lowPassAlphaAccelerometer" format="reference|float" />
+        <attr name="lowPassAlphaMagnetic" format="reference|float" />
+        <attr name="smoothListSize" format="reference|integer" />
+        <attr name="markerResource" format="reference|integer" />
+        <attr name="markerMaxZoom" format="reference|float" />
+        <attr name="markerMinZoom" format="reference|float" />
+
+    </declare-styleable>
+</resources>
