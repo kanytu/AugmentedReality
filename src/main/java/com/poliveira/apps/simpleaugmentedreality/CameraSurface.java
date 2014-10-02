@@ -171,4 +171,13 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
+    public CameraCallback getCameraCallback()
+    {
+        return mCameraCallback;
+    }
+
+    public void setCameraCallback(CameraCallback cameraCallback)
+    {
+        mCameraCallback = cameraCallback;
+    }
 }

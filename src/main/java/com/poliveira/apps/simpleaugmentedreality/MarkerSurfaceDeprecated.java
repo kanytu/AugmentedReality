@@ -11,10 +11,11 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.location.Location;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -22,29 +23,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by poliveira on 02/10/2014.
+ * Created by poliveira on 30/09/2014.
  */
-public class MarkerSurface extends SurfaceView implements View.OnTouchListener
+public class MarkerSurfaceDeprecated extends RelativeLayout implements View.OnTouchListener
 {
-    private Parameters mParameters;
     private MarkerAdapter mAdapter;
-    private Paint mPaint;
     private List<Marker> mVisibleMarkers;
-    private Bitmap mMarker;
+    private SurfaceView mSurfaceView;
+    private Parameters mParameters;
+    private Paint mPaint;
+    private RelativeLayout mInfoWindowView;
+    Bitmap mMarker;
 
-    public MarkerSurface(Context context)
+    public MarkerSurfaceDeprecated(Context context)
     {
         super(context);
         init();
     }
 
-    public MarkerSurface(Context context, AttributeSet attrs)
+    public MarkerSurfaceDeprecated(Context context, AttributeSet attrs)
     {
         super(context, attrs);
         init();
     }
 
-    public MarkerSurface(Context context, AttributeSet attrs, int defStyle)
+    public MarkerSurfaceDeprecated(Context context, AttributeSet attrs, int defStyle)
     {
         super(context, attrs, defStyle);
         init();
@@ -53,21 +56,18 @@ public class MarkerSurface extends SurfaceView implements View.OnTouchListener
     private void init()
     {
         mPaint = new Paint();
-        getHolder().setFormat(PixelFormat.TRANSPARENT);
-        mMarker = BitmapFactory.decodeResource(getResources(), R.drawable.defaultmarker);
-        // mMarker = BitmapFactory.decodeResource(getContext().getResources(), mParameters.getMarkerResource());
-        setOnTouchListener(this);
+        mSurfaceView = new SurfaceView(getContext());
+        mSurfaceView.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
+       // mMarker = BitmapFactory.decodeResource(getContext().getResources(), mParameters.getMarkerResource());
+        mSurfaceView.setOnTouchListener(this);
+        mInfoWindowView = (RelativeLayout) getParent();
+        addView(mSurfaceView);
     }
 
-    public Parameters getParameters()
+    public void setAdapter(MarkerAdapter adapter)
     {
-        return mParameters;
-    }
-
-    public void setParameters(Parameters parameters)
-    {
-        mParameters = parameters;
-        mMarker = BitmapFactory.decodeResource(getContext().getResources(), mParameters.getMarkerResource());
+        mAdapter = adapter;
     }
 
     public void updateView(double leftAngle, double rightAngle, double bottomAngle, double topAngle, Location currentLocation)
@@ -97,66 +97,72 @@ public class MarkerSurface extends SurfaceView implements View.OnTouchListener
     public void drawMarkers(List<Marker> visibleMarkers)
     {
         mVisibleMarkers = visibleMarkers;
-        Canvas c = getHolder().lockCanvas();
+        Canvas c = mSurfaceView.getHolder().lockCanvas();
         if (c != null)
         {
             c.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY);
             for (Marker marker : visibleMarkers)
             {
                 double zoomFactor = Utils.calculateZoomFactorFromDistance(mParameters, (float) marker.getDistance());
-                //  Log.v("teste", "zoom  for distance " + marker.getDistance() + " -> " + zoomFactor);
+              //  Log.v("teste", "zoom  for distance " + marker.getDistance() + " -> " + zoomFactor);
                 Rect src = new Rect(0, 0, mMarker.getWidth(), mMarker.getHeight());
-                Rect dst = new Rect((int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2, (int) marker.getViewPosition()[0] + (int) ((mMarker.getWidth() / 2) * zoomFactor), (int) marker.getViewPosition()[1] + (int) ((mMarker.getHeight() / 2) * zoomFactor));
+                Rect dst = new Rect((int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2, (int) marker.getViewPosition()[0] + (int) ((mMarker.getWidth()/2) * zoomFactor), (int) marker.getViewPosition()[1] + (int) ((mMarker.getHeight()/2) * zoomFactor));
                 marker.setArea(dst);
                 marker.setViewPosition(new double[]{(int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2});
-                // c.drawRect((int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2,(int) marker.getViewPosition()[0] + (int) ((mMarker.getWidth()/2) * zoomFactor), (int) marker.getViewPosition()[1] + (int) ((mMarker.getHeight()/2) * zoomFactor),mPaint);
+               // c.drawRect((int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2,(int) marker.getViewPosition()[0] + (int) ((mMarker.getWidth()/2) * zoomFactor), (int) marker.getViewPosition()[1] + (int) ((mMarker.getHeight()/2) * zoomFactor),mPaint);
                 c.drawBitmap(mMarker, src, dst, mPaint);
-                Log.v("teste", "marker drawn");
             }
-            getHolder().unlockCanvasAndPost(c);
+            mSurfaceView.getHolder().unlockCanvasAndPost(c);
         }
-    }
-
-    public MarkerAdapter getAdapter()
-    {
-        return mAdapter;
-    }
-
-    public void setAdapter(MarkerAdapter adapter)
-    {
-        mAdapter = adapter;
-    }
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event)
-    {
-        boolean flag = false;
-        if (((RealityView) getParent()).getMarkerClickListener() == null)
-            return true;
-        if (event.getAction() == MotionEvent.ACTION_DOWN)
-            for (Marker m : mAdapter.mMarkers)
-                if (m.isOnScreen((int) event.getX(), (int) event.getY()))
-                {
-                    flag = true;
-                    reportMarkerTouch(m);
-                }
-        if(!flag)
-            reportSpaceTouch();
-        return false;
-    }
-
-    private void reportSpaceTouch()
-    {
-        ((RealityView) getParent()).onSpaceTouch();
-    }
-
-    private void reportMarkerTouch(Marker m)
-    {
-        ((RealityView) getParent()).onMarkerTouch(m);
     }
 
     public List<Marker> getVisibleMarkers()
     {
         return mVisibleMarkers;
+    }
+
+    public void setVisibleMarkers(List<Marker> visibleMarkers)
+    {
+        mVisibleMarkers = visibleMarkers;
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event)
+    {
+        if(((RealityView)getParent().getParent()).getMarkerClickListener() ==null)
+            return true;
+        if (event.getAction() == MotionEvent.ACTION_DOWN)
+            for (Marker m : mAdapter.mMarkers)
+                if (m.isOnScreen((int)event.getX(), (int)event.getY()))
+                    reportMarkerClick(m);
+        return false;
+    }
+
+    private void reportMarkerClick(Marker m)
+    {
+        ((RealityView)getParent().getParent()).getMarkerClickListener().onMarkerTouch(m, mInfoWindowView);
+    }
+
+    public View getInfoWindowView()
+    {
+        return mInfoWindowView;
+    }
+
+    public void setInfoWindowView(int resource)
+    {
+        /*if(mInfoWindowView.getChildCount()<=0)
+           LayoutInflater.from(getContext()).inflate(resource, mInfoWindowView, true);*/
+    }
+
+    public Parameters getParameters()
+    {
+        return mParameters;
+    }
+
+    public void setParameters(Parameters parameters)
+    {
+
+        mParameters = parameters;
+        mMarker = BitmapFactory.decodeResource(getContext().getResources(), mParameters.getMarkerResource());
     }
 }

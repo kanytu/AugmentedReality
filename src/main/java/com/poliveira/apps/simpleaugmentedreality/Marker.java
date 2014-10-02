@@ -1,5 +1,7 @@
 package com.poliveira.apps.simpleaugmentedreality;
 
+import android.graphics.Rect;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.Random;
@@ -14,6 +16,7 @@ public class Marker
     private double[] mViewPosition;
     private double mBearing;
     private double mDistance;
+    private Rect mArea;
 
     public Marker(LatLng coordinates)
     {
@@ -69,5 +72,22 @@ public class Marker
     public void setDistance(double distance)
     {
         mDistance = distance;
+    }
+
+    public boolean isOnScreen(int x, int y){
+        if(mArea==null)
+            return false;
+        return mArea.intersects(x,y,x,y);
+        //return !(mViewPosition == null || mMarkerSize == null) && x > mViewPosition[0] - mMarkerSize[0]/2 && x < mViewPosition[0] + mMarkerSize[0]/2 && y > mViewPosition[1] - mMarkerSize[1]/2 && y < mViewPosition[1] + mMarkerSize[1]/2;
+    }
+
+    public Rect getArea()
+    {
+        return mArea;
+    }
+
+    public void setArea(Rect area)
+    {
+        mArea = area;
     }
 }

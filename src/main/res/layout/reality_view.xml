@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
+
+    <com.poliveira.apps.simpleaugmentedreality.MarkerSurface
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/surfaceMaker"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
+
+    <com.poliveira.apps.simpleaugmentedreality.CameraSurface
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/cameraSurface"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
+
+
+    <com.poliveira.apps.simpleaugmentedreality.InfoWindowView
+        android:id="@+id/infoWindow"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"/>
+
+
+</merge>

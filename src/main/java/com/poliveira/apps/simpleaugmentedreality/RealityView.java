@@ -8,7 +8,8 @@ import android.location.Location;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.ViewGroup;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.RelativeLayout;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -22,14 +23,20 @@ import java.util.List;
  */
 public class RealityView extends RelativeLayout implements SensorListener.SensorCallback, GooglePlayServicesClient.OnConnectionFailedListener, GooglePlayServicesClient.ConnectionCallbacks
 {
+
+    public interface MarkerClickListener{
+        void onMarkerTouch(Marker marker, View infoWindowView);
+    }
     final String TAG = "AugmentedRealityLibrary";
     CameraSurface mCameraSurface;
     MarkerSurface mMarkerSurface;
+    InfoWindowView mInfoWindowContainer;
     SensorListener mSensorListener;
     Parameters mParameters;
     SensorManager mSensorManager;
     private LocationClient mLocationClient;
     private Location mCurrentLocation;
+    MarkerClickListener mMarkerClickListener;
 
     public RealityView(Context context)
     {
@@ -87,7 +94,9 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
 
     private void init()
     {
-        mCameraSurface = new CameraSurface(getContext(), new CameraSurface.CameraCallback()
+        LayoutInflater.from(getContext()).inflate(R.layout.reality_view,this,true);
+        mCameraSurface = (CameraSurface) findViewById(R.id.cameraSurface);
+        mCameraSurface.setCameraCallback(new CameraSurface.CameraCallback()
         {
             @Override
             public void onReady()
@@ -110,12 +119,12 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
                 Log.v(TAG, "added sensors");
             }
         });
-        mCameraSurface.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        mMarkerSurface = new MarkerSurface(getContext(), mParameters);
-        mMarkerSurface.setLayoutParams (new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        addView(mMarkerSurface);
-        addView(mCameraSurface);
+        //mCameraSurface.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mInfoWindowContainer = (InfoWindowView) findViewById(R.id.infoWindow);
+        mMarkerSurface = (MarkerSurface) findViewById(R.id.surfaceMaker);
+        mMarkerSurface.setParameters(mParameters);
+        //mMarkerSurface = new MarkerSurface(getContext(),mParameters);
+        //mMarkerSurface.setLayoutParams (new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mLocationClient = new LocationClient(getContext(), this, this);
         mLocationClient.connect();
         Log.v(TAG, "view initialized");
@@ -156,7 +165,10 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
         });
         Log.v(TAG, "resume called");
     }
-
+    public void onSpaceTouch()
+    {
+        mInfoWindowContainer.hideInfoWindow();
+    }
     @Override
     public void onSensorChanged(double leftAngle, double rightAngle,double bottomAngle, double topAngle)
     {
@@ -189,10 +201,29 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
     {
         mCurrentLocation = mLocationClient.getLastLocation();
     }
-
+    public void onMarkerTouch(Marker m)
+    {
+        mInfoWindowContainer.showInfoWindow();
+        if(mMarkerClickListener!=null){
+            mMarkerClickListener.onMarkerTouch(m, mInfoWindowContainer);
+        }
+    }
     @Override
     public void onDisconnected()
     {
 
+    }
+
+    public MarkerClickListener getMarkerClickListener()
+    {
+        return mMarkerClickListener;
+    }
+
+    public void setMarkerClickListener(MarkerClickListener markerClickListener)
+    {
+        mMarkerClickListener = markerClickListener;
+    }
+    public void setInfoWindowView(int resource){
+        mInfoWindowContainer.setInfoView(resource);
     }
 }

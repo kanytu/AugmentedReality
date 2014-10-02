@@ -91,7 +91,6 @@ public class Utils
     public static double calculateZoomFactorFromDistance(Parameters parameters, float distance)
     {
         float zoomPerMeter = (parameters.getMarkerMaxZoom()-parameters.getMarkerMinZoom())/parameters.getDistanceOfView();
-        float zoom = parameters.getMarkerMaxZoom() -  Math.min(parameters.getMarkerMaxZoom(),Math.max(zoomPerMeter*distance+parameters.getMarkerMinZoom(),parameters.getMarkerMinZoom()))  + parameters.getMarkerMinZoom();
-        return zoom;
+        return parameters.getMarkerMaxZoom() -  Math.min(parameters.getMarkerMaxZoom(),Math.max(zoomPerMeter*distance+parameters.getMarkerMinZoom(),parameters.getMarkerMinZoom()))  + parameters.getMarkerMinZoom();
     }
 }
