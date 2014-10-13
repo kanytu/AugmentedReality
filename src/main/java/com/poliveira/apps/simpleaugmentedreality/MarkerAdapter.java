@@ -1,7 +1,5 @@
 package com.poliveira.apps.simpleaugmentedreality;
 
-import android.graphics.Canvas;
-
 import java.util.List;
 
 /**
@@ -9,11 +7,25 @@ import java.util.List;
  */
 public class MarkerAdapter
 {
-    List<Marker> mMarkers;
+    private List<Marker> mMarkers;
 
     public MarkerAdapter(List<Marker> markers)
     {
         mMarkers = markers;
     }
 
+    public List<Marker> getMarkers()
+    {
+        return mMarkers.subList(0, mMarkers.size());
+    }
+
+    public void setMarkers(List<Marker> markers)
+    {
+        mMarkers = markers;
+    }
+
+    public void notifyDataSetChanged(List<Marker> data)
+    {
+        mMarkers = data;
+    }
 }

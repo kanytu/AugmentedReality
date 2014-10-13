@@ -1,5 +1,6 @@
 package com.poliveira.apps.simpleaugmentedreality;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.hardware.Sensor;
@@ -96,13 +97,14 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
     {
         LayoutInflater.from(getContext()).inflate(R.layout.reality_view,this,true);
         mCameraSurface = (CameraSurface) findViewById(R.id.cameraSurface);
+        mCameraSurface.setCameraRotation((Activity)getContext());
         mCameraSurface.setCameraCallback(new CameraSurface.CameraCallback()
         {
             @Override
             public void onReady()
             {
                 getParameters().setCameraAngleOfView(new double[]{mCameraSurface.getCamera().getParameters().getHorizontalViewAngle(), mCameraSurface.getCamera().getParameters().getVerticalViewAngle()});
-                mSensorListener = new SensorListener(getParameters());
+                mSensorListener = new SensorListener(getParameters(),(Activity)getContext());
                 mSensorListener.setSensorCallback(RealityView.this);
                 mSensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
                 List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
@@ -112,6 +114,11 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
                 }
 
                 sensors = mSensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
+                if (sensors.size() > 0)
+                {
+                    mSensorManager.registerListener(mSensorListener, sensors.get(0), SensorManager.SENSOR_DELAY_NORMAL);
+                }
+                sensors = mSensorManager.getSensorList(Sensor.TYPE_ROTATION_VECTOR);
                 if (sensors.size() > 0)
                 {
                     mSensorManager.registerListener(mSensorListener, sensors.get(0), SensorManager.SENSOR_DELAY_NORMAL);
@@ -147,7 +154,7 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
             {
                 getParameters().setCameraAngleOfView(new double[]{mCameraSurface.getCamera().getParameters().getHorizontalViewAngle(), mCameraSurface.getCamera().getParameters().getVerticalViewAngle()});
                 mSensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
-                mSensorListener = new SensorListener(getParameters());
+                mSensorListener = new SensorListener(getParameters(),(Activity)getContext());
                 mSensorListener.setSensorCallback(RealityView.this);
                 List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
                 if (sensors.size() > 0)
@@ -156,6 +163,11 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
                 }
 
                 sensors = mSensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
+                if (sensors.size() > 0)
+                {
+                    mSensorManager.registerListener(mSensorListener, sensors.get(0), SensorManager.SENSOR_DELAY_NORMAL);
+                }
+                sensors = mSensorManager.getSensorList(Sensor.TYPE_ROTATION_VECTOR);
                 if (sensors.size() > 0)
                 {
                     mSensorManager.registerListener(mSensorListener, sensors.get(0), SensorManager.SENSOR_DELAY_NORMAL);
@@ -169,10 +181,11 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
     {
         mInfoWindowContainer.hideInfoWindow();
     }
+
     @Override
-    public void onSensorChanged(double leftAngle, double rightAngle,double bottomAngle, double topAngle)
+    public void onSensorChanged(float[] rotationMatrix)
     {
-        mMarkerSurface.updateView(leftAngle, rightAngle,bottomAngle,topAngle, mCurrentLocation);
+        mMarkerSurface.updateView(rotationMatrix, mCurrentLocation);
     }
 
     public Parameters getParameters()
@@ -194,6 +207,16 @@ public class RealityView extends RelativeLayout implements SensorListener.Sensor
     public void onConnectionFailed(ConnectionResult connectionResult)
     {
 
+    }
+
+    public CameraSurface getCameraSurface()
+    {
+        return mCameraSurface;
+    }
+
+    public void setCameraSurface(CameraSurface cameraSurface)
+    {
+        mCameraSurface = cameraSurface;
     }
 
     @Override

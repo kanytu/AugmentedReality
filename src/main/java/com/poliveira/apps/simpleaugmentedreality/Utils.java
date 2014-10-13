@@ -1,6 +1,11 @@
 package com.poliveira.apps.simpleaugmentedreality;
 
+import android.app.Activity;
+import android.content.Context;
+import android.hardware.Camera;
+import android.hardware.SensorManager;
 import android.location.Location;
+import android.view.Surface;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -49,6 +54,62 @@ public class Utils
         double dBearing = Math.atan2(y, x) * 180 / Math.PI;
 
         return (dBearing + 360) % 360;
+    }
+    public static void remapCoordinateSystem(Activity c, float[] input, float[] output)
+    {
+        int mScreenRotation = c.getWindowManager().getDefaultDisplay().getRotation();
+        int axisX = SensorManager.AXIS_X;
+        int axisY = SensorManager.AXIS_Y;
+        switch (mScreenRotation)
+        {
+            case Surface.ROTATION_0:
+                axisX = SensorManager.AXIS_X;
+                axisY = SensorManager.AXIS_MINUS_Y;
+                break;
+
+            case Surface.ROTATION_90:
+                axisX = SensorManager.AXIS_Y;
+                axisY = SensorManager.AXIS_MINUS_X;
+                break;
+
+            case Surface.ROTATION_180:
+                axisX = SensorManager.AXIS_MINUS_X;
+                axisY = SensorManager.AXIS_MINUS_Y;
+                break;
+
+            case Surface.ROTATION_270:
+                axisX = SensorManager.AXIS_MINUS_Y;
+                axisY = SensorManager.AXIS_X;
+                break;
+
+            default:
+                break;
+        }
+        SensorManager.remapCoordinateSystem(input, axisX, axisY, output);
+    }
+    public static int getCameraDisplayOrientation(Activity activity,
+                                                  int cameraId) {
+        android.hardware.Camera.CameraInfo info =
+                new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay()
+                .getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0: degrees = 0; break;
+            case Surface.ROTATION_90: degrees = 90; break;
+            case Surface.ROTATION_180: degrees = 180; break;
+            case Surface.ROTATION_270: degrees = 270; break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        return result;
     }
     //transform an angle between -180 180 to 0 - 360
     public static double transformAngle(double _angle)

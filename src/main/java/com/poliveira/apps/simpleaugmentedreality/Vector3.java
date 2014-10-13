@@ -15,7 +15,15 @@ public class Vector3
         this.y = y;
         this.z = z;
     }
-
+    public Vector3(float[] values){
+        if(values.length!=3) throw new RuntimeException("Invalid array size");
+        x=values[0];
+        y=values[1];
+        z=values[2];
+    }
+    public float[] getValues(){
+        return new float[]{x,y,z};
+    }
     public float getX()
     {
         return x;

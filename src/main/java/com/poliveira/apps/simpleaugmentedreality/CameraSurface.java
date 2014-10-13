@@ -1,5 +1,6 @@
 package com.poliveira.apps.simpleaugmentedreality;
 
+import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
 import android.util.AttributeSet;
@@ -14,6 +15,11 @@ import java.util.List;
  */
 public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
 {
+    public void setCameraRotation(Activity context)
+    {
+        mOrientation = Utils.getCameraDisplayOrientation(context,0);
+    }
+
     public interface CameraCallback
     {
         void onReady();
@@ -21,6 +27,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
 
     Camera mCamera;
     CameraCallback mCameraCallback;
+    int mOrientation;
 
     public Camera getCamera()
     {
@@ -74,6 +81,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
             }
 
             mCamera = Camera.open(0);
+            mCamera.setDisplayOrientation(mOrientation);
             mCamera.setPreviewDisplay(holder);
             if (mCameraCallback != null)
                 mCameraCallback.onReady();

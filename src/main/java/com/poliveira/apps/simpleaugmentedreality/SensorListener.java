@@ -1,5 +1,6 @@
 package com.poliveira.apps.simpleaugmentedreality;
 
+import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,21 +20,24 @@ public class SensorListener implements SensorEventListener
     private Parameters mParameters;
     private float[] mR = new float[9];
     private float[] mOrientation = new float[3];
-    private float mAngle;
     private float[] mI = new float[9];
     List<ArrayList<Float>> mGravitySmoother;
     List<ArrayList<Float>> mMagneticFieldSmoother;
+    private float[] mVector =new float[4];
+    private Activity mActivity= null;
 
-    public SensorListener(Parameters parameters)
+
+    public SensorListener(Parameters parameters, Activity activity)
     {
         mParameters = parameters;
         mGravitySmoother = Arrays.asList(new ArrayList<Float>(), new ArrayList<Float>(), new ArrayList<Float>());
         mMagneticFieldSmoother = Arrays.asList(new ArrayList<Float>(), new ArrayList<Float>(), new ArrayList<Float>());
+        mActivity = activity;
     }
 
     public interface SensorCallback
     {
-        void onSensorChanged(double leftAngle, double rightAngle, double bottomAngle, double topAngle);
+        void onSensorChanged(float[] rotationMatrix);
     }
 
     private SensorCallback mSensorCallback;
@@ -48,6 +52,9 @@ public class SensorListener implements SensorEventListener
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
                 mGeomagnetic = Utils.lowPass(smoothMagneticField(event.values.clone()), mGeomagnetic, mParameters.getLowPassAlphaMagnetic());
+                break;
+            case Sensor.TYPE_ROTATION_VECTOR:
+                mVector = event.values.clone();
                 break;
         }
         processSensor();
@@ -110,14 +117,18 @@ public class SensorListener implements SensorEventListener
 
     private void processSensor()
     {
-        if (mGravity != null && mGeomagnetic != null)
+        if (mGravity != null && mGeomagnetic != null && mVector!=null)
         {
-            SensorManager.getRotationMatrix(mR, mI, mGravity, mGeomagnetic);
-            SensorManager.getOrientation(mR, mOrientation);
-            mAngle = Utils.calculateFilteredAngle((float) Math.toDegrees((double) mOrientation[0]) - 90, mAngle);
-            double top = 90 - Math.toDegrees(Math.atan2(mGravity[0], mGravity[2]));
+            //SensorManager.getRotationMatrix(mR, mI, mGravity, mGeomagnetic);
+            //SensorManager.getOrientation(mR, mOrientation);
+            SensorManager.getRotationMatrixFromVector(mR,mVector);
+            float[] temp  = new float[9];
+            Utils.remapCoordinateSystem(mActivity,mR, temp);
+
+
             if (mSensorCallback != null)
-                mSensorCallback.onSensorChanged(Utils.transformAngle(mAngle) - mParameters.getCameraAngleOfView()[0] / 2, Utils.transformAngle(mAngle) + mParameters.getCameraAngleOfView()[0] / 2, top - mParameters.getCameraAngleOfView()[1] / 2, top + mParameters.getCameraAngleOfView()[1] / 2);
+                mSensorCallback.onSensorChanged(mR);
+               // mSensorCallback.onSensorChanged(Utils.transformAngle(mAngle) - mParameters.getCameraAngleOfView()[0] / 2, Utils.transformAngle(mAngle) + mParameters.getCameraAngleOfView()[0] / 2, top - mParameters.getCameraAngleOfView()[1] / 2, top + mParameters.getCameraAngleOfView()[1] / 2);
         }
     }
 

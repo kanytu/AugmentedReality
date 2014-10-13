@@ -70,26 +70,27 @@ public class MarkerSurface extends SurfaceView implements View.OnTouchListener
         mMarker = BitmapFactory.decodeResource(getContext().getResources(), mParameters.getMarkerResource());
     }
 
-    public void updateView(double leftAngle, double rightAngle, double bottomAngle, double topAngle, Location currentLocation)
+    public void updateView(float[] rotationMatrix, Location currentLocation)
     {
         if (currentLocation == null)
             return;
-        leftAngle = Math.min(leftAngle, rightAngle);
-        rightAngle = Math.max(leftAngle, rightAngle);
         LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
         List<Marker> temporary = new ArrayList<Marker>();
 
-        for (Marker marker : mAdapter.mMarkers)
+        for (Marker marker : mAdapter.getMarkers())
         {
-            marker.setBearing(Utils.coordinateBearing(marker.getCoordinates(), currentLatLng));
-            marker.setDistance(Utils.haversine(marker.getCoordinates().latitude, marker.getCoordinates().longitude, currentLatLng.latitude, currentLatLng.longitude) * 1000);
-            Vector3 teste = Utils.convLocToVec(currentLatLng, marker.getCoordinates());
+            marker.projectCoordinate(currentLatLng);
+            marker.setProjectedCoordinate(new Matrix(rotationMatrix).multiplyVector(marker.getProjectedCoordinate()));
+            marker.toFieldOfView(mParameters.getCameraAngleOfView()[0],mParameters.getCameraAngleOfView()[1],getHeight(),getWidth());
 
-            if (marker.getBearing() > leftAngle && marker.getBearing() < rightAngle)
-            {
-                marker.setViewPosition(new double[]{(((100 - ((rightAngle - marker.getBearing()) * 100) / (rightAngle - leftAngle))) / 100f) * getWidth(), (((100 - ((topAngle - marker.getAltitude()) * 100) / (topAngle - bottomAngle))) / 100f) * getHeight()});
-                temporary.add(marker);
-            }
+
+            float[] f = new float[3];
+            Location.distanceBetween(marker.getCoordinates().latitude, marker.getCoordinates().longitude, currentLatLng.latitude, currentLatLng.longitude,f);
+            marker.setDistance(f[0]);
+
+
+           //marker.setViewPosition(new double[]{(((100 - ((rightAngle - marker.getBearing()) * 100) / (rightAngle - leftAngle))) / 100f) * getWidth(), (((100 - ((topAngle - marker.getAltitude()) * 100) / (topAngle - bottomAngle))) / 100f) * getHeight()});
+           temporary.add(marker);
         }
         drawMarkers(temporary);
     }
@@ -106,12 +107,12 @@ public class MarkerSurface extends SurfaceView implements View.OnTouchListener
                 double zoomFactor = Utils.calculateZoomFactorFromDistance(mParameters, (float) marker.getDistance());
                 //  Log.v("teste", "zoom  for distance " + marker.getDistance() + " -> " + zoomFactor);
                 Rect src = new Rect(0, 0, mMarker.getWidth(), mMarker.getHeight());
-                Rect dst = new Rect((int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2, (int) marker.getViewPosition()[0] + (int) ((mMarker.getWidth() / 2) * zoomFactor), (int) marker.getViewPosition()[1] + (int) ((mMarker.getHeight() / 2) * zoomFactor));
+                Rect dst = new Rect((int) marker.getViewPosition().getX() - mMarker.getWidth() / 2, (int) marker.getViewPosition().getY() - mMarker.getHeight() / 2, (int)marker.getViewPosition().getX() + (int) ((mMarker.getWidth() / 2) * zoomFactor), (int) marker.getViewPosition().getY() + (int) ((mMarker.getHeight() / 2) * zoomFactor));
                 marker.setArea(dst);
-                marker.setViewPosition(new double[]{(int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2});
+                //marker.setViewPosition(new double[]{(int) marker.getViewPosition().getX() - mMarker.getWidth() / 2, (int) marker.getViewPosition().getY() - mMarker.getHeight() / 2});
                 // c.drawRect((int) marker.getViewPosition()[0] - mMarker.getWidth() / 2, (int) marker.getViewPosition()[1] - mMarker.getHeight() / 2,(int) marker.getViewPosition()[0] + (int) ((mMarker.getWidth()/2) * zoomFactor), (int) marker.getViewPosition()[1] + (int) ((mMarker.getHeight()/2) * zoomFactor),mPaint);
                 c.drawBitmap(mMarker, src, dst, mPaint);
-                Log.v("teste", "marker drawn");
+                Log.v("teste", "marker drawn at " +  marker.getViewPosition().getX() +  "     " + marker.getViewPosition().getY());
             }
             getHolder().unlockCanvasAndPost(c);
         }
@@ -134,7 +135,7 @@ public class MarkerSurface extends SurfaceView implements View.OnTouchListener
         if (((RealityView) getParent()).getMarkerClickListener() == null)
             return true;
         if (event.getAction() == MotionEvent.ACTION_DOWN)
-            for (Marker m : mAdapter.mMarkers)
+            for (Marker m : mAdapter.getMarkers())
                 if (m.isOnScreen((int) event.getX(), (int) event.getY()))
                 {
                     flag = true;

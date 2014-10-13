@@ -25,6 +25,10 @@ public class Parameters
         this.mLowPassAlphaAccelerometer = lowPassAlphaAccelerometer;
     }
 
+    /**
+     * [0] horizontal | [1] vertical
+     * @return
+     */
     public double[] getCameraAngleOfView()
     {
         return mCameraAngleOfView;
