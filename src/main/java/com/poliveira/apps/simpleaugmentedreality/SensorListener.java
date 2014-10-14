@@ -127,7 +127,7 @@ public class SensorListener implements SensorEventListener
 
 
             if (mSensorCallback != null)
-                mSensorCallback.onSensorChanged(mR);
+                mSensorCallback.onSensorChanged(temp);
                // mSensorCallback.onSensorChanged(Utils.transformAngle(mAngle) - mParameters.getCameraAngleOfView()[0] / 2, Utils.transformAngle(mAngle) + mParameters.getCameraAngleOfView()[0] / 2, top - mParameters.getCameraAngleOfView()[1] / 2, top + mParameters.getCameraAngleOfView()[1] / 2);
         }
     }

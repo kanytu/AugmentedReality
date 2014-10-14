@@ -129,10 +129,11 @@ public class Marker
 
     public void toFieldOfView(double horizontalAngle, double verticalAngle, int height, int width)
     {
-        float x = (float) ((mProjectedCoordinate.getX() / mProjectedCoordinate.getY()) * ((width / 2) / Math.tan(Math.toRadians(verticalAngle / 2))));
+        float screenRation = (width+height) / 2;
+        float x = (float) ((mProjectedCoordinate.getX() / mProjectedCoordinate.getY()) * ((screenRation) / Math.tan(Math.toRadians(verticalAngle / 2))));
         x += width / 2;
         x = width - x;
-        float y = (float) ((mProjectedCoordinate.getZ() / mProjectedCoordinate.getY()) * ((height / 2) / Math.tan(Math.toRadians(horizontalAngle/ 2))));
+        float y = (float) ((mProjectedCoordinate.getZ() / mProjectedCoordinate.getY()) * ((screenRation) / Math.tan(Math.toRadians(horizontalAngle/ 2))));
         y += height / 2;
         y = height - y;
         mViewPosition = new Vector3(new float[]{x, y,0});
